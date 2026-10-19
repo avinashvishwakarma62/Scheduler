@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131c">
+  <title>Dayflow — Day Scheduler</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">✦</span><span>dayflow</span></a>
+      <p class="nav-label">WORKSPACE</p>
+      <button class="nav-item active" data-view="overview">▦ <span>Overview</span></button>
+      <button class="nav-item" data-view="timetable">▦ <span>My timetable</span></button>
+      <button class="nav-item" data-view="tasks">☑ <span>Tasks</span></button>
+      <button class="nav-item" data-view="study">⌘ <span>Study & coding</span></button>
+      <button class="nav-item" data-view="habits">↗ <span>Habits</span></button>
+      <button class="nav-item" data-view="focus">◷ <span>Focus room</span></button>
+      <button class="nav-item" data-view="analytics">▥ <span>Analytics</span></button>
+      <div class="sidebar-bottom">
+        <div id="auth-status" class="auth-status">Not signed in</div>
+        <button id="signout-btn" class="btn ghost hidden">Sign out</button>
+        <p class="tiny muted">Cloud-first · Supabase</p>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow" id="today-label">YOUR PERSONAL WORKSPACE</p><h1 id="page-title">Your day, in focus.</h1></div>
+        <div class="top-actions"><button class="btn ghost" id="theme-btn">◐ Theme</button><button class="btn primary" id="quick-add">＋ Add task</button></div>
+      </header>
+
+      <section id="setup-banner" class="notice">
+        <strong>Connect your cloud workspace</strong>
+        <p>Add your Supabase URL and publishable/anon key in <code>app.js</code>, then sign in. Your app data is stored in Supabase, not localStorage.</p>
+      </section>
+
+      <section id="auth-card" class="panel auth-panel">
+        <div><p class="eyebrow">YOUR ACCOUNT</p><h2>Sign in to sync your day</h2><p class="muted">Create an account or sign in to load your cloud data across devices.</p></div>
+        <form id="auth-form" class="auth-form">
+          <input id="auth-email" type="email" placeholder="Email address" autocomplete="email" required>
+          <input id="auth-password" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" minlength="6" required>
+          <div class="auth-buttons"><button class="btn primary" type="submit" id="login-btn">Sign in</button><button class="btn secondary" type="button" id="signup-btn">Create account</button></div>
+          <p class="tiny muted" id="auth-message">Supabase Auth must be configured first.</p>
+        </form>
+      </section>
+
+      <section id="overview-view" class="view">
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon violet">☑</span><p class="muted">Tasks completed</p><h2 id="stat-completed">0 <small>/ 0</small></h2><div class="progress"><span id="task-progress"></span></div></article>
+          <article class="stat-card"><span class="stat-icon blue">◷</span><p class="muted">Focus time today</p><h2 id="stat-focus">0 min</h2><p class="tiny muted">Recorded focus sessions</p></article>
+          <article class="stat-card"><span class="stat-icon green">↗</span><p class="muted">Habits checked</p><h2 id="stat-habits">0 <small>/ 0</small></h2><p class="tiny muted">Today's habit check-ins</p></article>
+          <article class="stat-card"><span class="stat-icon orange">◎</span><p class="muted">Pending tasks</p><h2 id="stat-pending">0</h2><p class="tiny muted">Keep the next step small</p></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">PLAN</p><h2>Today's tasks</h2></div><button class="text-btn" data-goto="tasks">View all →</button></div><div id="overview-tasks" class="item-list empty">Sign in and add a task to get started.</div></article>
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">ROUTINE</p><h2>Today's timetable</h2></div><button class="text-btn" data-goto="timetable">Open timetable →</button></div><div id="overview-blocks" class="item-list empty">Your routine blocks will appear here.</div></article>
+        </div>
+      </section>
+
+      <section id="timetable-view" class="view hidden">
+        <div class="panel">
+          <div class="panel-head wrap"><div><p class="eyebrow">BUILD YOUR WEEK</p><h2>Weekly timetable</h2><p class="muted">Create recurring blocks, choose a template, then drag blocks to reorder them.</p></div><div class="inline-actions"><select id="routine-select"><option value="">Choose routine…</option></select><button class="btn secondary" id="apply-routine">Apply</button></div></div>
+          <form id="routine-form" class="inline-form">
+            <input id="routine-name" placeholder="New routine name (e.g. College week)" required>
+            <label class="check-label"><input id="routine-template" type="checkbox"> Save as template</label>
+            <button class="btn secondary">Create routine</button>
+          </form>
+          <form id="block-form" class="block-form">
+            <input id="block-title" placeholder="Activity (e.g. C++ practice)" required>
+            <select id="block-day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select>
+            <input id="block-start" type="time" value="18:00" required>
+            <input id="block-end" type="time" value="19:00" required>
+            <select id="block-category"><option>Study</option><option>Coding</option><option>College</option><option>Fitness</option><option>Personal</option><option>Break</option></select>
+            <button class="btn primary">＋ Add block</button>
+          </form>
+          <div id="timetable-grid" class="week-grid"><div class="empty">Sign in and create a routine to start scheduling.</div></div>
+        </div>
+      </section>
+
+      <section id="tasks-view" class="view hidden">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">GET IT DONE</p><h2>Tasks & planned vs actual</h2></div></div>
+          <form id="task-form" class="task-form">
+            <input id="task-title" placeholder="What needs to get done?" required>
+            <select id="task-category"><option>Personal</option><option>Study</option><option>Coding</option><option>College</option><option>Fitness</option><option>Project</option></select>
+            <select id="task-priority"><option value="medium">Medium priority</option><option value="high">High priority</option><option value="low">Low priority</option></select>
+            <input id="task-due" type="datetime-local" aria-label="Due date">
+            <button class="btn primary">Add task</button>
+          </form>
+          <div id="tasks-list" class="item-list empty">Your tasks will appear here.</div>
+        </div>
+      </section>
+
+      <section id="study-view" class="view hidden">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">KEEP LEARNING</p><h2>Study & coding tracker</h2><p class="muted">Track subjects, topics, coding practice and projects.</p></div></div>
+          <form id="study-form" class="inline-form"><input id="study-title" placeholder="e.g. C++ arrays, DSA, portfolio project" required><select id="study-type"><option value="subject">Subject</option><option value="topic">Topic</option><option value="coding">Coding</option><option value="project">Project</option><option value="assignment">Assignment</option></select><button class="btn primary">Add item</button></form>
+          <div id="study-list" class="item-list empty">Add a subject or coding goal to begin.</div>
+        </div>
+      </section>
+
+      <section id="habits-view" class="view hidden">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">SMALL WINS</p><h2>Habit tracker</h2><p class="muted">Check off today's habits. Your check-ins sync to your account.</p></div></div>
+          <form id="habit-form" class="inline-form"><input id="habit-name" placeholder="e.g. Gym, read 20 min, DSA practice" required><button class="btn primary">Add habit</button></form>
+          <div id="habits-list" class="item-list empty">Create a habit to start tracking consistency.</div>
+        </div>
+      </section>
+
+      <section id="focus-view" class="view hidden">
+        <div class="focus-layout"><article class="panel focus-panel"><p class="eyebrow">DEEP WORK</p><h2>Focus room</h2><div id="timer-display" class="timer">25:00</div><div class="timer-controls"><button id="timer-start" class="btn primary">Start focus</button><button id="timer-reset" class="btn secondary">Reset</button></div><div class="timer-presets"><button data-minutes="25">25 min</button><button data-minutes="50">50 min</button><button data-minutes="5">5 min break</button></div><p class="tiny muted" id="timer-status">Focus sessions are saved to your cloud account when completed.</p></article><article class="panel"><p class="eyebrow">HISTORY</p><h2>Recent sessions</h2><div id="focus-history" class="item-list empty">No sessions yet.</div></article></div>
+      </section>
+
+      <section id="analytics-view" class="view hidden">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">YOUR PROGRESS</p><h2>Analytics & reports</h2><p class="muted">A quick view of completion, focus time and routines.</p></div><button class="btn secondary" id="refresh-analytics">Refresh</button></div><div id="analytics-content" class="stats-grid"></div><div class="panel-subhead">Weekly task completion</div><div id="analytics-bars" class="bars"></div></div>
+      </section>
+
+      <section id="ai-view" class="view">
+        <div class="panel ai-panel"><div><p class="eyebrow">SMART PLANNING</p><h2>AI day planner</h2><p class="muted">Generate a suggested plan from your tasks and routine. AI runs server-side; add the Edge Function secret before enabling it.</p></div><textarea id="ai-notes" rows="3" placeholder="Anything to consider today? e.g. prioritize DSA, leave a break after college…"></textarea><button class="btn primary" id="generate-plan">Generate my plan</button><pre id="ai-result" class="ai-result">Your suggested plan will appear here.</pre><p class="tiny muted">This starter includes a secure Edge Function pattern. Configure your chosen AI provider and server-side secret before use.</p></div>
+      </section>
+      <footer>Built for a calmer, more intentional day. <span id="connection-label">Cloud connection not configured</span></footer>
+    </main>
+  </div>
+  <dialog id="task-dialog"><form id="dialog-task-form" method="dialog"><div class="panel-head"><h2>Quick add task</h2><button class="icon-btn" value="cancel" aria-label="Close">×</button></div><input id="dialog-task-title" placeholder="Task title" required><select id="dialog-task-category"><option>Personal</option><option>Study</option><option>Coding</option><option>College</option><option>Fitness</option><option>Project</option></select><div class="auth-buttons"><button class="btn primary" id="dialog-save" value="default">Save task</button></div></form></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
